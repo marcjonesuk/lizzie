@@ -5,15 +5,17 @@
  * file for details.
  */
 
+using System.Threading.Tasks;
+
 namespace lizzie
 {
     /// <summary>
     /// Delegate for all function invocations evaluated by Lizzie in its lambda delegate.
     /// </summary>
-    public delegate object Function<TContext>(TContext ctx, Binder<TContext> binder, Arguments arguments);
+    public delegate Task<object> Function<TContext>(TContext ctx, Binder<TContext> binder, Arguments arguments);
 
     /// <summary>
     /// Delegate for a lambda object created by Lizzie.
     /// </summary>
-    public delegate object Lambda<TContext>(TContext ctx, Binder<TContext> binder);
+    public delegate Task<object> Lambda<TContext>(TContext ctx, Binder<TContext> binder);
 }

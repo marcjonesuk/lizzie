@@ -101,7 +101,7 @@ namespace lizzie
              * also making sure we have our root level stack object available during evaluation of
              * our lambda.
              */
-            return new Lambda<TContext>((ctx, binder) => {
+            return new Lambda<TContext>(async (ctx, binder) => {
 
                 /*
                  * Looping through each symbolic delegate, returning the 
@@ -109,7 +109,7 @@ namespace lizzie
                  */
                 object result = null;
                 foreach (var ix in functions) {
-                    result = ix(ctx, binder, null);
+                    result = await ix(ctx, binder, null);
                 }
                 return result;
             });
@@ -185,10 +185,10 @@ namespace lizzie
              * Creating a function that evaluates every function sequentially, and
              * returns the result of the last function evaluation to the caller.
              */
-            Function<TContext> function = new Function<TContext>((ctx, binder, arguments) => {
+            Function<TContext> function = new Function<TContext>(async (ctx, binder, arguments) => {
                 object result = null;
                 foreach (var ix in functions) {
-                    result = ix(ctx, binder, null);
+                    result = await ix(ctx, binder, null);
                 }
                 return result;
             });
@@ -201,7 +201,7 @@ namespace lizzie
              * Lizzie, and does not require the '@' character to accomplish "lazy
              * evaluation".
              */
-            var lazyFunction = new Function<TContext>((ctx2, binder2, arguments2) => {
+            var lazyFunction = new Function<TContext>(async (ctx2, binder2, arguments2) => {
                 return function;
             });
             return new Tuple<Function<TContext>, bool>(lazyFunction, tuples.Item2 || !en.MoveNext());
@@ -238,7 +238,7 @@ namespace lizzie
                  */
                 var tuple = ApplyArguments<TContext>(symbolName, en);
                 var functor = tuple.Item1;
-                return new Tuple<Function<TContext>, bool>(new Function<TContext>((ctx, binder, arguments) => {
+                return new Tuple<Function<TContext>, bool>(new Function<TContext>(async (ctx, binder, arguments) => {
                     return functor;
                 }), tuple.Item2);
 
@@ -249,7 +249,7 @@ namespace lizzie
                  * When you use the '@' character with a symbol, this implies simply returning the
                  * symbol's name.
                  */
-                return new Tuple<Function<TContext>, bool>(new Function<TContext>((ctx, binder, arguments) => {
+                return new Tuple<Function<TContext>, bool>(new Function<TContext>(async (ctx, binder, arguments) => {
                     return symbolName;
                 }), eof);
             }
@@ -272,7 +272,7 @@ namespace lizzie
             en.MoveNext();
 
             // Returning a function that evaluates to the actual string's constant value.
-            var function = new Function<TContext>((ctx, binder, arguments) => {
+            var function = new Function<TContext>(async (ctx, binder, arguments) => {
                 return stringConstant;
             });
             return new Tuple<Function<TContext>, bool>(function, !en.MoveNext());
@@ -305,7 +305,7 @@ namespace lizzie
             }
 
             // Creates a function that evaluates to the actual constant number.
-            var function = new Function<TContext>((ctx, binder, arguments) => {
+            var function = new Function<TContext>(async (ctx, binder, arguments) => {
                 return numericConstant;
             });
             return new Tuple<Function<TContext>, bool>(function, !en.MoveNext());
@@ -333,7 +333,7 @@ namespace lizzie
             } else {
 
                 // Referencing value of symbol.
-                return new Tuple<Function<TContext>, bool>(new Function<TContext>((ctx, binder, arguments) => {
+                return new Tuple<Function<TContext>, bool>(new Function<TContext>(async (ctx, binder, arguments) => {
 
                     return binder[symbolName];
 
@@ -372,10 +372,16 @@ namespace lizzie
             /*
              * Creates a function invocation that evaluates its arguments at runtime.
              */
-            return new Tuple<Function<TContext>, bool>(new Function<TContext>((ctx, binder, args) => {
+            return new Tuple<Function<TContext>, bool>(new Function<TContext>(async (ctx, binder, args) => {
 
                 // Applying arguments.
-                var appliedArguments = new Arguments(arguments.Select(ix => ix(ctx, binder, new Arguments())));
+                var appliedArguments = new Arguments();
+                foreach (var ix in arguments)
+                {
+                    appliedArguments.Add(await ix(ctx, binder, new Arguments()));
+                }
+
+                //var appliedArguments = new Arguments(arguments.Select(async ix => await ix(ctx, binder, new Arguments())));
                 if (appliedArguments.Count == 1 && appliedArguments.Get(0) is Arguments explicitlyApplied) {
                     appliedArguments = explicitlyApplied;
                 }
@@ -385,7 +391,7 @@ namespace lizzie
                 if (symbol == null)
                     throw new LizzieRuntimeException($"Symbol '{symbolName}' is null.");
                 if (symbol is Function<TContext> functor)
-                    return functor(ctx, binder, appliedArguments); // Success!
+                    return await functor(ctx, binder, appliedArguments); // Success!
                 throw new LizzieRuntimeException($"'{symbolName}' is not a function, but a '{symbol.GetType().FullName}'");
             }), !en.MoveNext());
         }

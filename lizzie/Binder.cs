@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Linq.Expressions;
 using System.Collections.Generic;
 using lizzie.exceptions;
+using System.Threading.Tasks;
 
 namespace lizzie
 {
@@ -39,8 +40,8 @@ namespace lizzie
          * determined, due to that the bound type is not of type TContext, but
          * rather inherited from TContext.
          */
-        delegate object DeepFunction(object target, object[] arguments);
-        delegate object DeepStaticFunction(object[] arguments);
+        delegate Task<object> DeepFunction(object target, object[] arguments);
+        delegate Task<object> DeepStaticFunction(object[] arguments);
 
         // Statically bound variables/functions, and root level variables.
         readonly Dictionary<string, object> _staticBinder = new Dictionary<string, object>();
@@ -325,15 +326,15 @@ namespace lizzie
             if (!method.IsStatic) {
 
                 var lateBound = CreateInstanceFunction(method);
-                _staticBinder[functionName] = new Function<TContext>((ctx, binder, arguments) => {
-                    return lateBound(ctx, new object[] { binder, arguments });
+                _staticBinder[functionName] = new Function<TContext>(async (ctx, binder, arguments) => {
+                    return await lateBound(ctx, new object[] { binder, arguments });
                 });
 
             } else {
 
                 var lateBound = CreateStaticFunction(method);
-                _staticBinder[functionName] = new Function<TContext>((ctx, binder, arguments) => {
-                    return lateBound(new object[] { ctx, binder, arguments });
+                _staticBinder[functionName] = new Function<TContext>(async (ctx, binder, arguments) => {
+                    return await lateBound(new object[] { ctx, binder, arguments });
                 });
 
             }
