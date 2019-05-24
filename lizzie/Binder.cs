@@ -356,7 +356,7 @@ namespace lizzie
                     Expression.ArrayIndex(argumentsParameter, Expression.Constant(index)), parameter.ParameterType)).ToArray());
 
             var lambda = Expression.Lambda<DeepFunction>(
-              Expression.Convert(call, typeof(object)),
+              Expression.Convert(call, typeof(Task<object>)),
               instanceParameter,
               argumentsParameter);
 
@@ -377,7 +377,7 @@ namespace lizzie
                     Expression.ArrayIndex(argumentsParameter, Expression.Constant(index)), parameter.ParameterType)).ToArray());
 
             var lambda = Expression.Lambda<DeepStaticFunction>(
-              Expression.Convert(call, typeof(object)),
+              Expression.Convert(call, typeof(Task<object>)),
               argumentsParameter);
 
             return lambda.Compile();
@@ -406,8 +406,8 @@ namespace lizzie
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take an '{nameof(Arguments)}' type of argument as its third argument.");
                 if (method.ContainsGenericParameters)
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it requires a generic argument.");
-                if (method.ReturnType != typeof(object))
-                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't return '{nameof(Object)}'.");
+                if (method.ReturnType != typeof(Task<object>))
+                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't return '{nameof(Task<Object>)}'.");
 
             } else {
 
@@ -419,8 +419,8 @@ namespace lizzie
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take an '{nameof(Arguments)}' type of argument as its second argument.");
                 if (method.ContainsGenericParameters)
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it requires a generic argument.");
-                if (method.ReturnType != typeof(object))
-                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't return '{nameof(Object)}'.");
+                if (method.ReturnType != typeof(Task<object>))
+                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't return '{nameof(Task<Object>)}'.");
             }
         }
 

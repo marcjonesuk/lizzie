@@ -48,13 +48,13 @@ namespace lizzie
         /// <param name="code">Lizzie code to compile.</param>
         /// <param name="bindDeep">If true will perform binding on type of instance, and not on type TContext.</param>
         /// <typeparam name="TContext">The type of context you want to bind towards.</typeparam>
-        public static Func<object> Compile<TContext>(TContext context, string code, bool bindDeep = false)
+        public static Func<Task<object>> Compile<TContext>(TContext context, string code, bool bindDeep = false)
         {
             var tokenizer = new Tokenizer(new LizzieTokenizer());
             var function = Compiler.Compile<TContext>(tokenizer, code);
             var binder = new Binder<TContext>(bindDeep ? context : default(TContext));
             BindFunctions(binder);
-            return new Func<object>(() => {
+            return new Func<Task<object>>(() => {
                 return function(context, binder);
             });
         }
@@ -77,12 +77,12 @@ namespace lizzie
         /// <param name="binder">Binder to use for your lambda.</param>
         /// <param name="code">Lizzie code to compile.</param>
         /// <typeparam name="TContext">The type of context you want to bind towards.</typeparam>
-        public static Func<object> Compile<TContext>(TContext context, Binder<TContext> binder, string code)
+        public static Func<Task<object>> Compile<TContext>(TContext context, Binder<TContext> binder, string code)
         {
             var tokenizer = new Tokenizer(new LizzieTokenizer());
             var function = Compiler.Compile<TContext>(tokenizer, code);
-            return new Func<object>(() => {
-                return function(context, binder);
+            return new Func<Task<object>>(async () => {
+                return await function(context, binder);
             });
         }
 
@@ -94,58 +94,58 @@ namespace lizzie
         public static void BindFunctions<TContext>(Binder<TContext> binder)
         {
             //// Variables.
-            //binder["var"] = Functions<TContext>.Var;
-            //binder["set"] = Functions<TContext>.Set;
+            binder["var"] = Functions<TContext>.Var;
+            binder["set"] = Functions<TContext>.Set;
 
-            //// Comparison functions.
-            //binder["if"] = Functions<TContext>.If;
-            //binder["eq"] = Functions<TContext>.Eq;
-            //binder["mt"] = Functions<TContext>.Mt;
-            //binder["lt"] = Functions<TContext>.Lt;
-            //binder["mte"] = Functions<TContext>.Mte;
-            //binder["lte"] = Functions<TContext>.Lte;
-            //binder["not"] = Functions<TContext>.Not;
+            // Comparison functions.
+            binder["if"] = Functions<TContext>.If;
+            binder["eq"] = Functions<TContext>.Eq;
+            binder["mt"] = Functions<TContext>.Mt;
+            binder["lt"] = Functions<TContext>.Lt;
+            binder["mte"] = Functions<TContext>.Mte;
+            binder["lte"] = Functions<TContext>.Lte;
+            binder["not"] = Functions<TContext>.Not;
 
-            //// Boolean algebraic functions.
-            //binder["any"] = Functions<TContext>.Any;
-            //binder["all"] = Functions<TContext>.All;
+            // Boolean algebraic functions.
+            binder["any"] = Functions<TContext>.Any;
+            binder["all"] = Functions<TContext>.All;
 
-            //// Function functions.
-            //binder["function"] = Functions<TContext>.Function;
-            //binder["apply"] = Functions<TContext>.Apply;
+            // Function functions.
+            binder["function"] = Functions<TContext>.Function;
+            binder["apply"] = Functions<TContext>.Apply;
 
-            //// List functions,
-            //binder["list"] = Functions<TContext>.List;
-            //binder["slice"] = Functions<TContext>.Slice;
+            // List functions,
+            binder["list"] = Functions<TContext>.List;
+            binder["slice"] = Functions<TContext>.Slice;
 
-            //// Map functions,
-            //binder["map"] = Functions<TContext>.Map;
+            // Map functions,
+            binder["map"] = Functions<TContext>.Map;
 
-            //// Common functions for map and list.
-            //binder["get"] = Functions<TContext>.Get;
-            //binder["count"] = Functions<TContext>.Count;
-            //binder["add"] = Functions<TContext>.AddValue;
-            //binder["each"] = Functions<TContext>.Each;
+            // Common functions for map and list.
+            binder["get"] = Functions<TContext>.Get;
+            binder["count"] = Functions<TContext>.Count;
+            binder["add"] = Functions<TContext>.AddValue;
+            binder["each"] = Functions<TContext>.Each;
 
-            //// Conversion functions.
-            //binder["string"] = Functions<TContext>.String;
-            //binder["number"] = Functions<TContext>.Number;
-            //binder["json"] = Functions<TContext>.Json;
+            // Conversion functions.
+            binder["string"] = Functions<TContext>.String;
+            binder["number"] = Functions<TContext>.Number;
+            binder["json"] = Functions<TContext>.Json;
 
-            //// Math functions.
-            //binder["+"] = Functions<TContext>.Add;
-            //binder["-"] = Functions<TContext>.Subtract;
-            //binder["*"] = Functions<TContext>.Multiply;
-            //binder["/"] = Functions<TContext>.Divide;
-            //binder["%"] = Functions<TContext>.Modulo;
+            // Math functions.
+            binder["+"] = Functions<TContext>.Add;
+            binder["-"] = Functions<TContext>.Subtract;
+            binder["*"] = Functions<TContext>.Multiply;
+            binder["/"] = Functions<TContext>.Divide;
+            binder["%"] = Functions<TContext>.Modulo;
 
-            //// String functions.
-            //binder["substr"] = Functions<TContext>.Substr;
-            //binder["length"] = Functions<TContext>.Length;
-            //binder["replace"] = Functions<TContext>.Replace;
+            // String functions.
+            binder["substr"] = Functions<TContext>.Substr;
+            binder["length"] = Functions<TContext>.Length;
+            binder["replace"] = Functions<TContext>.Replace;
 
-            //// The eval function.
-            //binder["eval"] = Functions<TContext>.Eval;
+            // The eval function.
+            binder["eval"] = Functions<TContext>.Eval;
 
             // Null is simply a constant yielding null.
             binder["null"] = null;

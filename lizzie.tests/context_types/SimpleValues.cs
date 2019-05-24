@@ -6,6 +6,7 @@
  */
 
 using System;
+using System.Threading.Tasks;
 
 namespace lizzie.tests.context_types
 {
@@ -15,51 +16,51 @@ namespace lizzie.tests.context_types
         public string ValueString { get; set; }
 
         [Bind(Name = "set-value-integer")]
-        object SetValueInteger(Binder<SimpleValues> ctx, Arguments arguments)
+        async Task<object> SetValueInteger(Binder<SimpleValues> ctx, Arguments arguments)
         {
             ValueInteger = arguments.Get<int>(0);
             return null;
         }
 
         [Bind(Name = "get-value-integer")]
-        object GetValueInteger(Binder<SimpleValues> ctx, Arguments arguments)
+        async Task<object> GetValueInteger(Binder<SimpleValues> ctx, Arguments arguments)
         {
             return ValueInteger;
         }
 
         [Bind(Name = "get-static")]
-        public static object GetStatic(SimpleValues context, Binder<SimpleValues> ctx, Arguments arguments)
+        public static async Task<object> GetStatic(SimpleValues context, Binder<SimpleValues> ctx, Arguments arguments)
         {
             return 7;
         }
 
         [Bind(Name = "set-value-string")]
-        object SetValueString(Binder<SimpleValues> ctx, Arguments arguments)
+        async Task<object> SetValueString(Binder<SimpleValues> ctx, Arguments arguments)
         {
             ValueString = arguments.Get<string>(0);
             return null;
         }
 
         [Bind(Name = "get-value-string")]
-        object GetValueString(Binder<SimpleValues> ctx, Arguments arguments)
+        async Task<object> GetValueString(Binder<SimpleValues> ctx, Arguments arguments)
         {
             return ValueString;
         }
 
         [Bind(Name = "get-constant-integer-2")]
-        public object GetConstantPublicInteger(Binder<SimpleValues> ctx, Arguments arguments)
+        public async Task<object> GetConstantPublicInteger(Binder<SimpleValues> ctx, Arguments arguments)
         {
             return 57;
         }
 
         [Bind(Name = "get-constant-integer")]
-        protected object GetConstantInteger(Binder<SimpleValues> ctx, Arguments arguments)
+        protected async Task<object> GetConstantInteger(Binder<SimpleValues> ctx, Arguments arguments)
         {
             return 57;
         }
 
         [Bind(Name = "add-integers")]
-        object AddIntegers(Binder<SimpleValues> ctx, Arguments arguments)
+        async Task<object> AddIntegers(Binder<SimpleValues> ctx, Arguments arguments)
         {
             ValueInteger = 0;
             foreach (var ix in arguments) {
@@ -69,7 +70,7 @@ namespace lizzie.tests.context_types
         }
 
         [Bind(Name = "mirror")]
-        object Mirror(Binder<SimpleValues> ctx, Arguments arguments)
+        async Task<object> Mirror(Binder<SimpleValues> ctx, Arguments arguments)
         {
             return arguments.Get(0);
         }
