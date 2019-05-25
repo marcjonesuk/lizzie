@@ -14,6 +14,7 @@ using lizzie.exceptions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 
 namespace lizzie
 {
@@ -108,7 +109,7 @@ namespace lizzie
         /// Will return the result of the addition to caller.
         /// </summary>
         /// <value>The function wrapping the 'add keyword'.</value>
-        public static Function<TContext> Add => new Function<TContext>(async (ctx, binder, arguments) =>
+        public static Function<TContext> Add => new Function<TContext>((ctx, binder, arguments) =>
         {
             // Sanity checking code.
             if (arguments.Count < 2)
@@ -123,7 +124,12 @@ namespace lizzie
             }
 
             // Returning the result of the operation to caller.
-            return result;
+            return Task.FromResult<object>(result);
+        });
+
+		public static Function<TContext> Noop => new Function<TContext>((ctx, binder, arguments) =>
+        {
+            return Task.FromResult<object>(null);
         });
 
         /// <summary>
