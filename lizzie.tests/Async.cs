@@ -9,7 +9,7 @@ namespace lizzie.tests
     class AsyncClass
     {
         [Bind(Name = "foo")]
-        async Task<object> Foo(Binder<AsyncClass> ctx, Arguments arguments)
+        async Task<object> Foo(Binder<AsyncClass> ctx, object[] arguments)
         {
             var x = 10;
             await Task.Run(() => x++);

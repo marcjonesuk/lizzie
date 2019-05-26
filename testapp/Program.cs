@@ -36,14 +36,14 @@ namespace testapp
 
 			// Func<Task<object>> lambda = () => Task.FromResult<object>(-5-6-10);
 
-			var code = @"noop(noop(noop(noop(10, 57))))";
-			//var code = @"noop(10, 57)";
+			//var code = @"noop(noop(noop(noop(10, 57))))";
+			var code = @"add(3,5)";
 
 			var tokenizer = new Tokenizer(new LizzieTokenizer());
 			var function = Compiler.Compile<LambdaCompiler.Nothing>(tokenizer, code);
 			var ctx = new LambdaCompiler.Nothing();
 			var binder = new Binder<LambdaCompiler.Nothing>();
-			binder["+"] = Functions<LambdaCompiler.Nothing>.Add;
+			binder["add"] = Functions<LambdaCompiler.Nothing>.Add;
 			binder["noop"] = Functions<LambdaCompiler.Nothing>.Noop;
 
 			var result = function(ctx, binder);
@@ -59,12 +59,12 @@ namespace testapp
 			// 	var x = lambda2().Result;
 			// }
 
-			for (var i = 0; i < 300000; i++)
+			for (var i = 0; i < 1000000; i++)
 			{
 				var x = await function(ctx, binder);
 			}
 
-			Console.Write(sw.ElapsedMilliseconds);
+			Console.WriteLine(sw.ElapsedMilliseconds);
 		}
 	}
 }

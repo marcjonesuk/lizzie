@@ -402,8 +402,8 @@ namespace lizzie
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take a '{nameof(TContext)}' type of argument as its first argument.");
                 if (methodArgs[1].ParameterType != typeof(Binder<TContext>))
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take a '{nameof(Binder<TContext>)}' type of argument as its second argument.");
-                if (methodArgs[2].ParameterType != typeof(Arguments))
-                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take an '{nameof(Arguments)}' type of argument as its third argument.");
+                if (methodArgs[2].ParameterType != typeof(object[]))
+                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take an '{typeof(object[]).Name}' type of argument as its third argument.");
                 if (method.ContainsGenericParameters)
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it requires a generic argument.");
                 if (method.ReturnType != typeof(Task<object>))
@@ -415,8 +415,8 @@ namespace lizzie
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take the right number of arguments");
                 if (methodArgs[0].ParameterType != typeof(Binder<TContext>))
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take a '{nameof(Binder<TContext>)}' type of argument as its first argument.");
-                if (methodArgs[1].ParameterType != typeof(Arguments))
-                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take an '{nameof(Arguments)}' type of argument as its second argument.");
+                if (methodArgs[1].ParameterType != typeof(object[]))
+                    throw new LizzieBindingException($"Can't bind to {method.Name} since it doesn't take an '{typeof(object[]).Name}' type of argument as its second argument.");
                 if (method.ContainsGenericParameters)
                     throw new LizzieBindingException($"Can't bind to {method.Name} since it requires a generic argument.");
                 if (method.ReturnType != typeof(Task<object>))

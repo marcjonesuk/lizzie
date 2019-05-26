@@ -114,11 +114,11 @@ namespace lizzie
 				{
 					if (ix is FunctionAsync<TContext>)
 						result = await ((FunctionAsync<TContext>)ix)(ctx, binder, null);
-					else 
+					else
 						result = ((Function<TContext>)ix)(ctx, binder, null);
 
 					var r = result as ReturnValue;
-					if (r != null) 
+					if (r != null)
 					{
 						return r.Value;
 					}
@@ -206,11 +206,11 @@ namespace lizzie
 				{
 					if (ix is FunctionAsync<TContext>)
 						result = await ((FunctionAsync<TContext>)ix)(ctx, binder, null);
-					else 
+					else
 						result = ((Function<TContext>)ix)(ctx, binder, null);
 
 					var r = result as ReturnValue;
-					if (r != null) 
+					if (r != null)
 					{
 						return r;
 					}
@@ -340,8 +340,9 @@ namespace lizzie
 			}
 
 			// Creates a function that evaluates to the actual constant number.
-			var function = new Function<TContext>((ctx, binder, arguments) => {
-			    return numericConstant;
+			var function = new Function<TContext>((ctx, binder, arguments) =>
+			{
+				return numericConstant;
 			});
 			return new Tuple<object, bool>(function, !en.MoveNext());
 		}
@@ -414,32 +415,38 @@ namespace lizzie
              */
 			return new Tuple<object, bool>(new FunctionAsync<TContext>(async (ctx, binder, args) =>
 			{
-				// Applying arguments.
-				var appliedArguments = new Arguments(arguments.Count);
-				foreach (var ix in arguments)
-				{
-					object result;
-					if (ix is FunctionAsync<TContext> funcAsync)
-						result = await funcAsync(ctx, binder, null);
-					else 
-						result = ((Function<TContext>)ix)(ctx, binder, null);
+				object[] argsArray = null;
+				var symbol = binder[symbolName];
+				
+					argsArray = new object[arguments.Count];
 
-					appliedArguments.Add(result);
-				}
+					for (var i = 0; i < argsArray.Length; i++)
+					{
+						var ix = arguments[i];
+						object result;
+						if (ix is FunctionAsync<TContext> funcAsync)
+							result = await funcAsync(ctx, binder, null);
+						else
+							result = ((Function<TContext>)ix)(ctx, binder, null);
 
-				if (appliedArguments.Count == 1 && appliedArguments.Get(0) is Arguments explicitlyApplied)
-				{
-					appliedArguments = explicitlyApplied;
-				}
+						argsArray[i] = result;
+					}
+			
+				// TODO:
+				// 	if (appliedArguments.Count == 1 && appliedArguments.Get(0) is Arguments explicitlyApplied)
+				// 	{
+				// 		appliedArguments = explicitlyApplied;
+				// 	}
+				// }
 
 				// Retrieving symbol's value and doing some basic sanity checks.
-				var symbol = binder[symbolName];
+
 				if (symbol == null)
 					throw new LizzieRuntimeException($"Symbol '{symbolName}' is null.");
-				if (symbol is FunctionAsync<TContext> functor)
-					return await functor(ctx, binder, appliedArguments); // Success!
-				if (symbol is Function<TContext> functors)
-					return functors(ctx, binder, appliedArguments); // Success!
+				if (symbol is FunctionAsync<TContext> asyncFunctor)
+					return await asyncFunctor(ctx, binder, argsArray); // Success!
+				if (symbol is Function<TContext> functor)
+					return functor(ctx, binder, argsArray); // Success!
 				throw new LizzieRuntimeException($"'{symbolName}' is not a function, but a '{symbol.GetType().FullName}'");
 			}), !en.MoveNext());
 		}

@@ -9,25 +9,15 @@ using System.Threading.Tasks;
 
 namespace lizzie
 {
-	public class FunctionWrapper<TContext> 
-	{
-		FunctionAsync<TContext> FunctionAsync {get;set;}
-
-		public FunctionWrapper(FunctionAsync<TContext> functionAsync)
-		{
-			FunctionAsync = functionAsync;
-		}
-	}
-
 	/// <summary>
 	/// Delegate for all asynchronous function invocations evaluated by Lizzie in its lambda delegate.
 	/// </summary>
-	public delegate Task<object> FunctionAsync<TContext>(TContext ctx, Binder<TContext> binder, Arguments arguments);
+	public delegate Task<object> FunctionAsync<TContext>(TContext ctx, Binder<TContext> binder, object[] arguments);
 
 	/// <summary>
 	/// Delegate for all synchronous function invocations evaluated by Lizzie in its lambda delegate.
 	/// </summary>
-	public delegate object Function<TContext>(TContext ctx, Binder<TContext> binder, Arguments arguments);
+	public delegate object Function<TContext>(TContext ctx, Binder<TContext> binder, object[] arguments);
 
 	/// <summary>
 	/// Delegate for a lambda object created by Lizzie.
