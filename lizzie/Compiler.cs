@@ -112,7 +112,10 @@ namespace lizzie
 				object result = null;
 				foreach (var ix in functions)
 				{
-					result = await ix(ctx, binder, null);
+					if (ix is FunctionAsync<TContext>)
+						result = await ((FunctionAsync<TContext>)ix)(ctx, binder, null);
+					else 
+						result = ((Function<TContext>)ix)(ctx, binder, null);
 
 					var r = result as ReturnValue;
 					if (r != null) 
@@ -131,10 +134,10 @@ namespace lizzie
          * If "forceClose" is true, it will expect a brace '}' to end the lambda segment,
          * and throw an exception if it finds EOF before it finds the closing '}'.
          */
-		static Tuple<List<FunctionAsync<TContext>>, bool> CompileStatements<TContext>(IEnumerator<string> en, bool forceClose = true)
+		static Tuple<List<object>, bool> CompileStatements<TContext>(IEnumerator<string> en, bool forceClose = true)
 		{
 			// Creating a list of functions and returning these to caller.
-			var content = new List<FunctionAsync<TContext>>();
+			var content = new List<object>();
 			var eof = !en.MoveNext();
 			while (!eof && en.Current != "}")
 			{
@@ -156,7 +159,7 @@ namespace lizzie
 				throw new LizzieParsingException("Premature EOF while parsing code, missing an '}' character.");
 			if (!forceClose && !eof && en.Current == "}")
 				throw new LizzieParsingException("Unexpected closing brace '}' in code, did you add one too many '}' characters?");
-			return new Tuple<List<FunctionAsync<TContext>>, bool>(content, eof);
+			return new Tuple<List<object>, bool>(content, eof);
 		}
 
 		/*
@@ -186,7 +189,7 @@ namespace lizzie
 		/*
          * Compiles a lambda down to a function and returns the function to caller.
          */
-		static Tuple<FunctionAsync<TContext>, bool> CompileLambda<TContext>(IEnumerator<string> en)
+		static Tuple<object, bool> CompileLambda<TContext>(IEnumerator<string> en)
 		{
 			// Compiling body, and retrieving functions.
 			var tuples = CompileStatements<TContext>(en);
@@ -201,7 +204,11 @@ namespace lizzie
 				object result = null;
 				foreach (var ix in functions)
 				{
-					result = await ix(ctx, binder, null);
+					if (ix is FunctionAsync<TContext>)
+						result = await ((FunctionAsync<TContext>)ix)(ctx, binder, null);
+					else 
+						result = ((Function<TContext>)ix)(ctx, binder, null);
+
 					var r = result as ReturnValue;
 					if (r != null) 
 					{
@@ -223,13 +230,13 @@ namespace lizzie
 			{
 				return function;
 			});
-			return new Tuple<FunctionAsync<TContext>, bool>(lazyFunction, tuples.Item2 || !en.MoveNext());
+			return new Tuple<object, bool>(lazyFunction, tuples.Item2 || !en.MoveNext());
 		}
 
 		/*
          * Compiles a literal reference down to a function and returns the function to caller.
          */
-		static Tuple<FunctionAsync<TContext>, bool> CompileSymbolReference<TContext>(IEnumerator<string> en)
+		static Tuple<object, bool> CompileSymbolReference<TContext>(IEnumerator<string> en)
 		{
 			// Sanity checking tokenizer's content, since an '@' must reference an actual symbol.
 			if (!en.MoveNext())
@@ -258,7 +265,7 @@ namespace lizzie
                  */
 				var tuple = ApplyArguments<TContext>(symbolName, en);
 				var functor = tuple.Item1;
-				return new Tuple<FunctionAsync<TContext>, bool>(new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+				return new Tuple<object, bool>(new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
 				{
 					return functor;
 				}), tuple.Item2);
@@ -272,7 +279,7 @@ namespace lizzie
                  * When you use the '@' character with a symbol, this implies simply returning the
                  * symbol's name.
                  */
-				return new Tuple<FunctionAsync<TContext>, bool>(new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+				return new Tuple<object, bool>(new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
 				{
 					return symbolName;
 				}), eof);
@@ -282,7 +289,7 @@ namespace lizzie
 		/*
          * Compiles a constant string down to a symbol and returns to caller.
          */
-		static Tuple<FunctionAsync<TContext>, bool> CompileString<TContext>(IEnumerator<string> en)
+		static Tuple<object, bool> CompileString<TContext>(IEnumerator<string> en)
 		{
 			// Storing type of string literal quote.
 			var quote = en.Current;
@@ -300,13 +307,13 @@ namespace lizzie
 			{
 				return stringConstant;
 			});
-			return new Tuple<FunctionAsync<TContext>, bool>(function, !en.MoveNext());
+			return new Tuple<object, bool>(function, !en.MoveNext());
 		}
 
 		/*
          * Compiles a constant number down to a symbol and returns to caller.
          */
-		static Tuple<Function<TContext>, bool> CompileNumber<TContext>(IEnumerator<string> en)
+		static Tuple<object, bool> CompileNumber<TContext>(IEnumerator<string> en)
 		{
 			// Holds our actual number, which might be double or long.
 			object numericConstant = null;
@@ -336,14 +343,14 @@ namespace lizzie
 			var function = new Function<TContext>((ctx, binder, arguments) => {
 			    return numericConstant;
 			});
-			return new Tuple<Function<TContext>, bool>(function, !en.MoveNext());
+			return new Tuple<object, bool>(function, !en.MoveNext());
 		}
 
 		/*
          * Compiles a symbolic reference down to a function invocation and returns
          * that function to caller.
          */
-		static Tuple<FunctionAsync<TContext>, bool> CompileSymbol<TContext>(IEnumerator<string> en)
+		static Tuple<object, bool> CompileSymbol<TContext>(IEnumerator<string> en)
 		{
 			// Retrieving symbol's name and sanity checking it.
 			var symbolName = en.Current;
@@ -364,7 +371,7 @@ namespace lizzie
 			{
 
 				// Referencing value of symbol.
-				return new Tuple<FunctionAsync<TContext>, bool>(new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+				return new Tuple<object, bool>(new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
 				{
 
 					return binder[symbolName];
@@ -376,10 +383,10 @@ namespace lizzie
 		/*
          * Applies arguments to a function invoction, such that they're evaluated at runtime.
          */
-		static Tuple<FunctionAsync<TContext>, bool> ApplyArguments<TContext>(string symbolName, IEnumerator<string> en)
+		static Tuple<object, bool> ApplyArguments<TContext>(string symbolName, IEnumerator<string> en)
 		{
 			// Used to hold arguments before they're being applied inside of function evaluation.
-			var arguments = new List<FunctionAsync<TContext>>();
+			var arguments = new List<object>();
 
 			// Sanity checking tokenizer's content.
 			if (!en.MoveNext())
@@ -405,17 +412,21 @@ namespace lizzie
 			/*
              * Creates a function invocation that evaluates its arguments at runtime.
              */
-			return new Tuple<FunctionAsync<TContext>, bool>(new FunctionAsync<TContext>(async (ctx, binder, args) =>
+			return new Tuple<object, bool>(new FunctionAsync<TContext>(async (ctx, binder, args) =>
 			{
-
 				// Applying arguments.
-				var appliedArguments = new Arguments();
+				var appliedArguments = new Arguments(arguments.Count);
 				foreach (var ix in arguments)
 				{
-					appliedArguments.Add(await ix(ctx, binder, new Arguments()));
+					object result;
+					if (ix is FunctionAsync<TContext> funcAsync)
+						result = await funcAsync(ctx, binder, null);
+					else 
+						result = ((Function<TContext>)ix)(ctx, binder, null);
+
+					appliedArguments.Add(result);
 				}
 
-				//var appliedArguments = new Arguments(arguments.Select(async ix => await ix(ctx, binder, new Arguments())));
 				if (appliedArguments.Count == 1 && appliedArguments.Get(0) is Arguments explicitlyApplied)
 				{
 					appliedArguments = explicitlyApplied;

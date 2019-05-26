@@ -138,7 +138,6 @@ namespace lizzie
 
 		public static Function<TContext> Noop => new Function<TContext>((ctx, binder, arguments) =>
 		{
-			// return Task.FromResult<object>(null);
 			return null;
 		});
 
@@ -559,7 +558,7 @@ namespace lizzie
 				{
 
 					// Checking if function returns something, and returning predicate value accordingly.
-					var ixContent = function(ctx, binder, new Arguments());
+					var ixContent = function(ctx, binder, new Arguments(0));
 					if (ixContent == null)
 						return false;
 					return true;

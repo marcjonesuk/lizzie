@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Diagnostics;
 using lizzie;
+using System.Collections.Generic;
 
 namespace testapp
 {
@@ -36,7 +37,7 @@ namespace testapp
 			// Func<Task<object>> lambda = () => Task.FromResult<object>(-5-6-10);
 
 			var code = @"noop(noop(noop(noop(10, 57))))";
-
+			//var code = @"noop(10, 57)";
 
 			var tokenizer = new Tokenizer(new LizzieTokenizer());
 			var function = Compiler.Compile<LambdaCompiler.Nothing>(tokenizer, code);
@@ -47,10 +48,10 @@ namespace testapp
 
 			var result = function(ctx, binder);
 
-			for (var i = 0; i < 1; i++)
-			{
-				var x = await function(ctx, binder);
-			}
+			// for (var i = 0; i < 1; i++)
+			// {
+			// 	var x = await function(ctx, binder);
+			// }
 
 			var sw = Stopwatch.StartNew();
 
