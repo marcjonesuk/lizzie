@@ -20,7 +20,7 @@ namespace lizzie
 	public delegate object Function<TContext>(TContext ctx, Binder<TContext> binder, object[] arguments);
 
 	/// <summary>
-	/// Delegate for a lambda object created by Lizzie.
+	/// Delegate for an asynchronous lambda object created by Lizzie.
 	/// </summary>
-	public delegate Task<object> Lambda<TContext>(TContext ctx, Binder<TContext> binder);
+	public delegate Task<object> LambdaAsync<TContext>(TContext ctx, Binder<TContext> binder);
 }

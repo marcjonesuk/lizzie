@@ -56,7 +56,7 @@ namespace lizzie.tests
         [Test]
         public async Task UnaryMinus()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo,10)
 -(foo)");
             var result = await lambda();

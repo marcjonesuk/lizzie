@@ -17,7 +17,7 @@ namespace lizzie.tests
         [Test]
         public async Task CreateList()
         {
-            var lambda = LambdaCompiler.Compile("list(57, 67, 77)");
+            var lambda = LambdaCompiler.CompileAsync("list(57, 67, 77)");
             var result = await lambda();
             Assert.IsTrue(result is List<object>);
             var list = result as List<object>;
@@ -30,7 +30,7 @@ namespace lizzie.tests
         [Test]
         public async Task CountListContent()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77))
 count(foo)");
             var result = await lambda();
@@ -40,7 +40,7 @@ count(foo)");
         [Test]
         public async Task GetListValue()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77))
 get(foo, 2)");
             var result = await lambda();
@@ -50,7 +50,7 @@ get(foo, 2)");
         [Test]
         public async Task AddToList()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57))
 add(foo, 67, 77)
 foo");
@@ -66,7 +66,7 @@ foo");
         [Test]
         public async Task SliceList_01()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77, 87))
 slice(foo, 1, 3)");
             var result = await lambda();
@@ -80,7 +80,7 @@ slice(foo, 1, 3)");
         [Test]
         public async Task SliceList_02()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77, 87))
 slice(foo, 1)");
             var result = await lambda();
@@ -95,7 +95,7 @@ slice(foo, 1)");
         [Test]
         public async Task SliceList_03()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77, 87))
 slice(foo)");
             var result = await lambda();
@@ -111,7 +111,7 @@ slice(foo)");
         [Test]
         public async Task SliceList_04()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77, 87))
 slice(foo, 1, 1)");
             var result = await lambda();
@@ -123,7 +123,7 @@ slice(foo, 1, 1)");
         [Test]
         public async Task Each_01()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77, 87))
 var(@bar, list())
 each(@ix, foo, {
@@ -143,7 +143,7 @@ bar");
         [Test]
         public async Task Each_02()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77, 87))
 var(@bar, list())
 each(@ix, foo, {
@@ -163,7 +163,7 @@ bar");
         [Test]
         public async Task Each_03()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(""57"", ""67"", ""77"", ""88.88"", ""97""))
 var(@bar, list())
 each(@ix, foo, {
@@ -184,7 +184,7 @@ bar");
         [Test]
         public async Task Each_04()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, list(57, 67, 77))
 var(@bar, each(@ix, foo, {
   +(ix, 10)
@@ -202,7 +202,7 @@ bar");
         [Test]
         public async Task ApplyArgumentsToAdd()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, +(apply(list(57,10,10))))
 ");
             var result = await lambda();

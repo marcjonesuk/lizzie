@@ -24,7 +24,7 @@ namespace lizzie.tests
         public async Task TaskIsAwaited()
         {
             AsyncClass simple = new AsyncClass();
-            var lambda = LambdaCompiler.Compile(simple, "foo()", true);
+            var lambda = LambdaCompiler.CompileAsync(simple, "foo()", true);
             var result = await lambda();
             Assert.AreEqual(12, result);
         }

@@ -24,7 +24,7 @@ namespace lizzie
         /// </summary>
         /// <returns>The compiled lambda function.</returns>
         /// <param name="code">Lizzie code to compile.</param>
-        public static Func<Task<object>> Compile(string code)
+        public static Func<Task<object>> CompileAsync(string code)
         {
             var tokenizer = new Tokenizer(new LizzieTokenizer());
             var function = Compiler.Compile<Nothing>(tokenizer, code);
@@ -33,6 +33,27 @@ namespace lizzie
             var nothing = new Nothing();
             return new Func<Task<object>>(async () => {
                 return await function(nothing, binder);
+            });
+        }
+
+		/// <summary>
+        /// Compiling the specified code to a lambda function, without requiring
+        /// the caller to bind the evaluation towards a particular type.
+        /// 
+        /// Will bind to all the default 'keywords' in Lizzie found in the
+        /// Functions class.
+        /// </summary>
+        /// <returns>The compiled lambda function.</returns>
+        /// <param name="code">Lizzie code to compile.</param>
+		public static Func<object> Compile(string code)
+        {
+            var tokenizer = new Tokenizer(new LizzieTokenizer());
+            var function = Compiler.Compile<Nothing>(tokenizer, code);
+            var binder = new Binder<Nothing>();
+            BindFunctions(binder);
+            var nothing = new Nothing();
+            return new Func<object>(() => {
+                return function(nothing, binder).Result;
             });
         }
 
@@ -48,7 +69,7 @@ namespace lizzie
         /// <param name="code">Lizzie code to compile.</param>
         /// <param name="bindDeep">If true will perform binding on type of instance, and not on type TContext.</param>
         /// <typeparam name="TContext">The type of context you want to bind towards.</typeparam>
-        public static Func<Task<object>> Compile<TContext>(TContext context, string code, bool bindDeep = false)
+        public static Func<Task<object>> CompileAsync<TContext>(TContext context, string code, bool bindDeep = false)
         {
             var tokenizer = new Tokenizer(new LizzieTokenizer());
             var function = Compiler.Compile<TContext>(tokenizer, code);
@@ -56,6 +77,29 @@ namespace lizzie
             BindFunctions(binder);
             return new Func<Task<object>>(() => {
                 return function(context, binder);
+            });
+        }
+
+        /// <summary>
+        /// Compiles the specified code, binding to the specified context, and
+        /// returns a function allowing you to evaluate the specified code.
+        /// 
+        /// Will bind to all the default 'keywords' in Lizzie found in the
+        /// Functions class.
+        /// </summary>
+        /// <returns>The compiled lambda function.</returns>
+        /// <param name="context">Context to bind the evaluation towards.</param>
+        /// <param name="code">Lizzie code to compile.</param>
+        /// <param name="bindDeep">If true will perform binding on type of instance, and not on type TContext.</param>
+        /// <typeparam name="TContext">The type of context you want to bind towards.</typeparam>
+		public static Func<object> Compile<TContext>(TContext context, string code, bool bindDeep = false)
+        {
+            var tokenizer = new Tokenizer(new LizzieTokenizer());
+            var function = Compiler.Compile<TContext>(tokenizer, code);
+            var binder = new Binder<TContext>(bindDeep ? context : default(TContext));
+            BindFunctions(binder);
+            return new Func<object>(() => {
+                return function(context, binder).Result;
             });
         }
 
@@ -77,12 +121,39 @@ namespace lizzie
         /// <param name="binder">Binder to use for your lambda.</param>
         /// <param name="code">Lizzie code to compile.</param>
         /// <typeparam name="TContext">The type of context you want to bind towards.</typeparam>
-        public static Func<Task<object>> Compile<TContext>(TContext context, Binder<TContext> binder, string code)
+        public static Func<Task<object>> CompileAsync<TContext>(TContext context, Binder<TContext> binder, string code)
         {
             var tokenizer = new Tokenizer(new LizzieTokenizer());
             var function = Compiler.Compile<TContext>(tokenizer, code);
             return new Func<Task<object>>(async () => {
                 return await function(context, binder);
+            });
+        }
+
+        /// <summary>
+        /// Compiles the specified code, binding to the specified context, and
+        /// returns a function allowing you to evaluate the specified code.
+        /// 
+        /// Will not bind the binder to any functions. If you wish to bind the
+        /// binder to the default functions, you can use 'LambdaCompiler.BindFunctions'.
+        /// 
+        /// If you use this overload, and you cache your Binder, you will
+        /// experience significant performance improvements, since the process of creating
+        /// a Binder has some overhead, due to the compilation of lambda expressions,
+        /// and dependencies upon reflection. If you do, you must never use your
+        /// "master" Binder instance, but Clone it every time you want to use it.
+        /// </summary>
+        /// <returns>The compiled lambda function.</returns>
+        /// <param name="context">Context to bind the lambda towards.</param>
+        /// <param name="binder">Binder to use for your lambda.</param>
+        /// <param name="code">Lizzie code to compile.</param>
+        /// <typeparam name="TContext">The type of context you want to bind towards.</typeparam>
+		public static Func<object> Compile<TContext>(TContext context, Binder<TContext> binder, string code)
+        {
+            var tokenizer = new Tokenizer(new LizzieTokenizer());
+            var function = Compiler.Compile<TContext>(tokenizer, code);
+            return new Func<object>(() => {
+                return function(context, binder).Result;
             });
         }
 

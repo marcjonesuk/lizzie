@@ -15,6 +15,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Buffers;
 
 namespace lizzie
 {
@@ -41,7 +42,7 @@ namespace lizzie
 		/// will be set to 'null'. The function will return the initial value of your symbol.
 		/// </summary>
 		/// <value>The function wrapping the 'var keyword'.</value>
-		public static FunctionAsync<TContext> Var => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Var => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking invocation.
 			if (arguments.Length == 0)
@@ -82,7 +83,7 @@ namespace lizzie
 		/// This function will return the new value of your symbol.
 		/// </summary>
 		/// <value>The function wrapping the 'set keyword'.</value>
-		public static FunctionAsync<TContext> Set => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Set => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking invocation.
 			if (arguments.Length == 0)
@@ -124,7 +125,8 @@ namespace lizzie
 			if (arguments.Length < 2)
 				throw new LizzieRuntimeException("The 'add' keyword requires at least 2 arguments, and you tried to invoke it with fewer.");
 
-			if (arguments[0].GetType() == typeof(Int64) && arguments[1].GetType() == typeof(Int64)){
+			if (arguments.Length == 2 && arguments[0].GetType() == typeof(Int64) && arguments[1].GetType() == typeof(Int64))
+			{
 				return (Int64)arguments[0] + (Int64)arguments[1];
 			}
 
@@ -140,6 +142,23 @@ namespace lizzie
 			return result;
 		});
 
+		public static FunctionAsync<TContext> Loop => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		{
+			if (arguments.Length != 2)
+				throw new LizzieRuntimeException("");
+
+			var iterations = arguments.Get<Int64>(0);
+			var lambdaAsync = arguments.Get(1) as FunctionAsync<TContext>;
+			if (lambdaAsync == null)
+					throw new LizzieRuntimeException("The 'loop' keyword requires a lambda argument as its second argument.");
+
+			for (var i = 0; i < iterations; i++)
+			{
+				await lambdaAsync(ctx, binder, arguments);
+			}
+			return null;
+		});
+
 		public static Function<TContext> Noop => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			return null;
@@ -152,7 +171,7 @@ namespace lizzie
 		/// Will return the result of the subtraction to caller.
 		/// </summary>
 		/// <value>The function wrapping the 'subtract keyword'.</value>
-		public static FunctionAsync<TContext> Subtract => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Subtract => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking code.
 			if (arguments.Length < 1)
@@ -171,15 +190,15 @@ namespace lizzie
 			return result;
 		});
 
-		public static FunctionAsync<TContext> Write => new FunctionAsync<TContext>((ctx, binder, arguments) =>
+		public static Function<TContext> Write => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			Console.WriteLine(arguments.Get(0));
-			return Task.FromResult<object>(null);
+			return null;
 		});
 
-		public static FunctionAsync<TContext> Return => new FunctionAsync<TContext>((ctx, binder, arguments) =>
+		public static Function<TContext> Return => new Function<TContext>((ctx, binder, arguments) =>
 		{
-			return Task.FromResult<object>(new ReturnValue(arguments.Get(0)));
+			return new ReturnValue(arguments.Get(0));
 		});
 
 		/// <summary>
@@ -189,7 +208,7 @@ namespace lizzie
 		/// Will return the result of the multiplication to caller.
 		/// </summary>
 		/// <value>The function wrapping the 'multiply keyword'.</value>
-		public static FunctionAsync<TContext> Multiply => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Multiply => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking code.
 			if (arguments.Length < 2)
@@ -213,7 +232,7 @@ namespace lizzie
 		/// Will return the result of the division to caller.
 		/// </summary>
 		/// <value>The function wrapping the 'divide keyword'.</value>
-		public static FunctionAsync<TContext> Divide => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Divide => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking code.
 			if (arguments.Length < 2)
@@ -237,7 +256,7 @@ namespace lizzie
 		/// Will return the result to caller.
 		/// </summary>
 		/// <value>The function wrapping the 'modulo keyword'.</value>
-		public static FunctionAsync<TContext> Modulo => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Modulo => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking code.
 			if (arguments.Length < 2)
@@ -263,7 +282,7 @@ namespace lizzie
 		/// inside of the function by name.
 		/// </summary>
 		/// <value>The function wrapping the 'function keyword'.</value>
-		public static FunctionAsync<TContext> Function => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Function => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking code.
 			if (arguments.Length == 0)
@@ -290,9 +309,8 @@ namespace lizzie
              * NOTICE!
              * A function always pushes the stack.
              */
-			return new FunctionAsync<TContext>((invocationContext, invocationBinder, invocationArguments) =>
+			return new FunctionAsync<TContext>(async (invocationContext, invocationBinder, invocationArguments) =>
 			{
-
 				/*
                  * Sanity checking that caller did not supply more arguments than
                  * the function is declared to at maximum being able to handle.
@@ -304,7 +322,6 @@ namespace lizzie
 				invocationBinder.PushStack();
 				try
 				{
-
 					/*
                      * Binding all argument declarations for our lambda to whatever
                      * the caller provided as values during invocation.
@@ -329,12 +346,10 @@ namespace lizzie
 					}
 
 					// Evaluating function.
-					return lambda(invocationContext, invocationBinder, invocationArguments);
-
+					return await lambda(invocationContext, invocationBinder, invocationArguments);
 				}
 				finally
 				{
-
 					// Popping stack.
 					invocationBinder.PopStack();
 				}
@@ -350,7 +365,7 @@ namespace lizzie
 		/// Will return an "arguments collection" to caller.
 		/// </summary>
 		/// <value>The applied arguments.</value>
-		public static FunctionAsync<TContext> Apply => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Apply => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking invocation.
 			if (arguments.Length != 1)
@@ -359,14 +374,11 @@ namespace lizzie
 			// Checking type of invocation, which might be 'list' or 'map'.
 			if (arguments.Get(0) is List<object> list)
 			{
-
 				// list of arguments.
 				return list.ToArray();
-
 			}
 			else
 			{
-
 				// Oops ...!!
 				throw new LizzieRuntimeException("The 'apply' keyword expects a 'list' as its only argument.");
 			}
@@ -420,7 +432,7 @@ namespace lizzie
 		/// to compare does not equal all other objects it is asked to compare.
 		/// </summary>
 		/// <value>The function wrapping the 'eq keyword'.</value>
-		public static FunctionAsync<TContext> Eq => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Eq => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length < 2)
 				throw new LizzieRuntimeException("The 'eq' function must be given at least 2 arguments.");
@@ -447,7 +459,7 @@ namespace lizzie
 		/// that has overloaded the more than operator.
 		/// </summary>
 		/// <value>The function wrapping the 'mt keyword'.</value>
-		public static FunctionAsync<TContext> Mt => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Mt => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 2)
 				throw new LizzieRuntimeException("The 'more than' function must be given exactly 2 arguments.");
@@ -468,7 +480,7 @@ namespace lizzie
 		/// that has overloaded the less than operator.
 		/// </summary>
 		/// <value>The function wrapping the 'lt keyword'.</value>
-		public static FunctionAsync<TContext> Lt => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Lt => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 2)
 				throw new LizzieRuntimeException("The 'less than' function must be given exactly 2 arguments.");
@@ -490,7 +502,7 @@ namespace lizzie
 		/// that has overloaded the more than equals operator.
 		/// </summary>
 		/// <value>The function wrapping the 'mte keyword'.</value>
-		public static FunctionAsync<TContext> Mte => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Mte => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 2)
 				throw new LizzieRuntimeException("The 'more than equals' function must be given exactly 2 arguments.");
@@ -512,7 +524,7 @@ namespace lizzie
 		/// for any object that has overloaded the less than equals operator.
 		/// </summary>
 		/// <value>The function wrapping the 'lte keyword'.</value>
-		public static FunctionAsync<TContext> Lte => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Lte => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 2)
 				throw new LizzieRuntimeException("The 'less than' function must be given exactly 2 arguments.");
@@ -525,6 +537,15 @@ namespace lizzie
 			return null;
 		});
 
+		public static FunctionAsync<TContext> Sleep => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		{
+			if (arguments.Length != 1)
+				throw new LizzieRuntimeException("The 'sleep' function must be given exactly 1 numeric argument.");
+			var delay = arguments.Get<int>(0);
+			await Task.Delay(delay);
+			return null;
+		});
+
 		/// <summary>
 		/// Negates the given value, whatever it previously was.
 		///
@@ -534,7 +555,7 @@ namespace lizzie
 		/// not operator normally would do in a conventional programming language.
 		/// </summary>
 		/// <value>The function wrapping the 'not keyword'.</value>
-		public static FunctionAsync<TContext> Not => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Not => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 1)
 				throw new LizzieRuntimeException("The 'not' function must be given exactly 1 argument.");
@@ -554,13 +575,13 @@ namespace lizzie
              * Notice, if there are zero arguments given to "any", it will return null (false), contrary to "all" that will return true
              * given an empty list of arguments.
              */
+			// TODO: Handle async calls
 			return arguments.FirstOrDefault(ix =>
 			{
 
 				// Making sure we verify that this is a "delayed verification" of condition.
 				if (ix is FunctionAsync<TContext> function)
 				{
-
 					// Checking if function returns something, and returning predicate value accordingly.
 					var ixContent = function(ctx, binder, new object[0]);
 					if (ixContent == null)
@@ -614,7 +635,7 @@ namespace lizzie
 					{
 
 						// Making sure we verify that this is a "delayed verification" of condition.
-						if (functor(ctx, binder, arguments) == null)
+						if (await functor(ctx, binder, arguments) == null)
 							return null; // No reasons to continue ...
 
 					}
@@ -646,7 +667,7 @@ namespace lizzie
 		/// members, and return that list to the caller.
 		/// </summary>
 		/// <value>The function wrapping the 'list keyword'.</value>
-		public static FunctionAsync<TContext> List => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> List => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			return new List<object>(arguments);
 		});
@@ -658,7 +679,7 @@ namespace lizzie
 		/// as its first argument.
 		/// </summary>
 		/// <value>The function wrapping the 'count keyword'.</value>
-		public static FunctionAsync<TContext> Count => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Count => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 1)
 				throw new LizzieRuntimeException("The 'count' function must be given exactly 1 argument, and that argument must be a list or a map.");
@@ -684,23 +705,20 @@ namespace lizzie
 		/// argument you supply to this function.
 		/// </summary>
 		/// <value>The function wrapping the 'get keyword'.</value>
-		public static FunctionAsync<TContext> Get => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Get => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 2)
 				throw new LizzieRuntimeException("The 'get' function must be given exactly 2 arguments. The first argument must be a list or a map, and the second argument a numeric value or a key.");
 			if (arguments.Get(1) is string key)
 			{
-
 				// Map de-referencing operation.
 				var map = arguments.Get(0) as Dictionary<string, object>;
 				if (map == null)
 					throw new LizzieRuntimeException("The 'get' function must be given a list or a map as its first argument.");
 				return map[arguments.Get<string>(1)];
-
 			}
 			else
 			{
-
 				// List de-referencing operation.
 				var list = arguments.Get(0) as List<object>;
 				if (list == null)
@@ -718,7 +736,7 @@ namespace lizzie
 		/// items added to your list.
 		/// </summary>
 		/// <value>The function wrapping the 'add keyword'.</value>
-		public static FunctionAsync<TContext> AddValue => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> AddValue => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length < 2)
 				throw new LizzieRuntimeException("The 'add' function must be given at least 2 arguments. The first argument must be a 'list' or a 'map', and the rest of the arguments objects to add to your 'list' or your 'map'.");
@@ -771,7 +789,7 @@ namespace lizzie
 		/// create the slice from.
 		/// </summary>
 		/// <value>The function wrapping the 'slice keyword'.</value>
-		public static FunctionAsync<TContext> Slice => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Slice => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length == 0 || arguments.Length > 3)
 				throw new LizzieRuntimeException("The 'slice' function must be given 1-3 arguments, the first argument must be a list, and the optional 2nd and 3rd arguments must be numeric values.");
@@ -817,14 +835,13 @@ namespace lizzie
 			var retVal = new List<object>();
 			if (arguments.Get(1) is List<object> list)
 			{
-
 				// List.
 				try
 				{
 					foreach (var ix in list)
 					{
 						binder[argName] = ix;
-						var current = lambda(ctx, binder, arguments);
+						var current = await lambda(ctx, binder, arguments);
 						retVal.Add(current);
 					}
 				}
@@ -844,7 +861,7 @@ namespace lizzie
 					foreach (var ix in map.Keys)
 					{
 						binder[argName] = ix;
-						var current = lambda(ctx, binder, arguments);
+						var current = await lambda(ctx, binder, arguments);
 						retVal.Add(current);
 					}
 				}
@@ -871,7 +888,7 @@ namespace lizzie
 		/// it to caller.
 		/// </summary>
 		/// <value>The function wrapping the 'map keyword'.</value>
-		public static FunctionAsync<TContext> Map => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Map => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			var map = new Dictionary<string, object>();
 			var en = arguments.GetEnumerator();
@@ -890,7 +907,7 @@ namespace lizzie
 		/// Gets from string.
 		/// </summary>
 		/// <value>From string.</value>
-		public static FunctionAsync<TContext> Json => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Json => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 1)
 				throw new LizzieRuntimeException("The 'json' function must be given exactly 1 argument.");
@@ -1071,7 +1088,7 @@ namespace lizzie
 		/// it is given. The function must be given exactly one argument.
 		/// </summary>
 		/// <value>The function wrapping the 'number keyword'.</value>
-		public static FunctionAsync<TContext> Number => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Number => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			if (arguments.Length != 1)
 				throw new LizzieRuntimeException("The 'number' function must be given exactly 1 argument.");
@@ -1097,7 +1114,7 @@ namespace lizzie
 		/// to the entire length of the original string.
 		/// </summary>
 		/// <value>The function wrapping the 'substr keyword'.</value>
-		public static FunctionAsync<TContext> Substr => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Substr => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking.
 			if (arguments.Length < 2)
@@ -1136,7 +1153,7 @@ namespace lizzie
 		/// This function will return the length of the given string value.
 		/// </summary>
 		/// <value>The function wrapping the 'length keyword'.</value>
-		public static FunctionAsync<TContext> Length => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Length => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking.
 			if (arguments.Length != 1)
@@ -1155,7 +1172,7 @@ namespace lizzie
 		/// value of the 3rd argument, and return a new string to the caller.
 		/// </summary>
 		/// <value>The function wrapping the 'replace keyword'.</value>
-		public static FunctionAsync<TContext> Replace => new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+		public static Function<TContext> Replace => new Function<TContext>((ctx, binder, arguments) =>
 		{
 			// Sanity checking.
 			if (arguments.Length != 3)
@@ -1185,8 +1202,8 @@ namespace lizzie
 
 			// Retrieving string's length.
 			var arg1 = arguments.Get<string>(0);
-			var lambda = LambdaCompiler.Compile<TContext>(ctx, arg1);
-			return lambda();
+			var lambda = LambdaCompiler.CompileAsync<TContext>(ctx, arg1);
+			return await lambda();
 		});
 	}
 }

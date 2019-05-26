@@ -16,7 +16,7 @@ namespace lizzie.tests
         [Test]
         public async Task SubstringOnlyOffset()
         {
-            var lambda = LambdaCompiler.Compile(@"substr(""foobarxyz"", 3)");
+            var lambda = LambdaCompiler.CompileAsync(@"substr(""foobarxyz"", 3)");
             var result = await lambda();
             Assert.AreEqual("barxyz", result);
         }
@@ -24,7 +24,7 @@ namespace lizzie.tests
         [Test]
         public async Task SubstringWithCount()
         {
-            var lambda = LambdaCompiler.Compile(@"substr(""foobarxyz"", 3, 3)");
+            var lambda = LambdaCompiler.CompileAsync(@"substr(""foobarxyz"", 3, 3)");
             var result = await lambda();
             Assert.AreEqual("bar", result);
         }
@@ -32,7 +32,7 @@ namespace lizzie.tests
         [Test]
         public async Task LengthOfString()
         {
-            var lambda = LambdaCompiler.Compile(@"length(""foo"")");
+            var lambda = LambdaCompiler.CompileAsync(@"length(""foo"")");
             var result = await lambda();
             Assert.AreEqual(3, result);
         }
@@ -40,7 +40,7 @@ namespace lizzie.tests
         [Test]
         public async Task Replace()
         {
-            var lambda = LambdaCompiler.Compile(@"replace(""foo"", ""o"", ""xx"")");
+            var lambda = LambdaCompiler.CompileAsync(@"replace(""foo"", ""o"", ""xx"")");
             var result = await lambda();
             Assert.AreEqual("fxxxx", result);
         }
@@ -48,7 +48,7 @@ namespace lizzie.tests
         [Test]
         public async Task SingleQuoteStrings()
         {
-            var lambda = LambdaCompiler.Compile(@"replace('foo', 'o', 'xx')");
+            var lambda = LambdaCompiler.CompileAsync(@"replace('foo', 'o', 'xx')");
             var result = await lambda();
             Assert.AreEqual("fxxxx", result);
         }
@@ -56,7 +56,7 @@ namespace lizzie.tests
         [Test]
         public async Task EscapedSingleQuotedString()
         {
-            var lambda = LambdaCompiler.Compile(@"'foo\'bar'");
+            var lambda = LambdaCompiler.CompileAsync(@"'foo\'bar'");
             var result = await lambda();
             Assert.AreEqual("foo'bar", result);
         }
@@ -64,7 +64,7 @@ namespace lizzie.tests
         [Test]
         public async Task ConvertFromNumber()
         {
-            var lambda = LambdaCompiler.Compile(@"string(57)");
+            var lambda = LambdaCompiler.CompileAsync(@"string(57)");
             var result = await lambda();
             Assert.AreEqual("57", result);
         }
@@ -72,7 +72,7 @@ namespace lizzie.tests
         [Test]
         public async Task ConvertToNumber()
         {
-            var lambda = LambdaCompiler.Compile(@"number('57')");
+            var lambda = LambdaCompiler.CompileAsync(@"number('57')");
             var result = await lambda();
             Assert.AreEqual(57, result);
         }
@@ -80,7 +80,7 @@ namespace lizzie.tests
         [Test]
         public async Task ConvertFromStringToString()
         {
-            var lambda = LambdaCompiler.Compile(@"string('57')");
+            var lambda = LambdaCompiler.CompileAsync(@"string('57')");
             var result = await lambda();
             Assert.AreEqual("57", result);
         }
@@ -88,7 +88,7 @@ namespace lizzie.tests
         [Test]
         public async Task EscapedDoubleQuotedString()
         {
-            var lambda = LambdaCompiler.Compile(@"""foo\""bar""");
+            var lambda = LambdaCompiler.CompileAsync(@"""foo\""bar""");
             var result = await lambda();
             Assert.AreEqual("foo\"bar", result);
         }
@@ -96,7 +96,7 @@ namespace lizzie.tests
         [Test]
         public async Task JSONString_01()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 string(map(
   'foo', 57,
   'bar', 67
@@ -109,7 +109,7 @@ string(map(
         [Test]
         public async Task JSONString_02()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 string(map(
   'foo', 'howdy',
   'bar', 'world'
@@ -122,7 +122,7 @@ string(map(
         [Test]
         public async Task JSONString_03()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 string(map(
   'foo', 'howdy',
   'bar', 'wor""ld'
@@ -135,7 +135,7 @@ string(map(
         [Test]
         public async Task JSONString_04()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 string(list(
   'foo',
   'bar'
@@ -148,7 +148,7 @@ string(list(
         [Test]
         public async Task JSONString_05()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 string(list(
   'foo',
   map(
@@ -165,7 +165,7 @@ string(list(
         [Test]
         public async Task JSONStringToObject_01()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 json(""{'foo':57}"")
 ");
             var result = await lambda();
@@ -177,7 +177,7 @@ json(""{'foo':57}"")
         [Test]
         public async Task JSONStringToObject_02()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 json(""[0,1,2]"")
 ");
             var result = await lambda();
@@ -192,7 +192,7 @@ json(""[0,1,2]"")
         [Test]
         public async Task JSONStringToObject_03()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 json(""[0,1,{'foo':57,'bar':77,'hello':'world'}]"")
 ");
             var result = await lambda();
@@ -215,7 +215,7 @@ json(""[0,1,{'foo':57,'bar':77,'hello':'world'}]"")
             var success = false;
             try
             {
-                var lambda = LambdaCompiler.Compile(@"'foo");
+                var lambda = LambdaCompiler.CompileAsync(@"'foo");
             }
             catch
             {
@@ -230,7 +230,7 @@ json(""[0,1,{'foo':57,'bar':77,'hello':'world'}]"")
             var success = false;
             try
             {
-                var lambda = LambdaCompiler.Compile("'foo\n'");
+                var lambda = LambdaCompiler.CompileAsync("'foo\n'");
             }
             catch
             {
@@ -245,7 +245,7 @@ json(""[0,1,{'foo':57,'bar':77,'hello':'world'}]"")
             var success = false;
             try
             {
-                var lambda = LambdaCompiler.Compile("'foo\r'");
+                var lambda = LambdaCompiler.CompileAsync("'foo\r'");
             }
             catch
             {

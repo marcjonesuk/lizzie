@@ -12,6 +12,7 @@ using System.Globalization;
 using System.Collections.Generic;
 using lizzie.exceptions;
 using System.Threading.Tasks;
+using System.Buffers;
 
 namespace lizzie
 {
@@ -29,7 +30,7 @@ namespace lizzie
 		/// <param name="stream">Stream containing Lizzie code. Notice, this method does not claim ownership over
 		/// your stream, and you are responsible for correctly disposing it yourself</param>
 		/// <typeparam name="TContext">The type of your context object.</typeparam>
-		public static Lambda<TContext> Compile<TContext>(Tokenizer tokenizer, Stream stream)
+		public static LambdaAsync<TContext> Compile<TContext>(Tokenizer tokenizer, Stream stream)
 		{
 			return Compile<TContext>(tokenizer.Tokenize(stream));
 		}
@@ -42,7 +43,7 @@ namespace lizzie
 		/// <param name="streams">Streams containing Lizzie code. Notice, this method does not claim ownership over
 		/// your streams, and you are responsible for correctly disposing your streams yourself</param>
 		/// <typeparam name="TContext">The type of your context object.</typeparam>
-		public static Lambda<TContext> Compile<TContext>(Tokenizer tokenizer, IEnumerable<Stream> streams)
+		public static LambdaAsync<TContext> Compile<TContext>(Tokenizer tokenizer, IEnumerable<Stream> streams)
 		{
 			return Compile<TContext>(tokenizer.Tokenize(streams));
 		}
@@ -54,7 +55,7 @@ namespace lizzie
 		/// <param name="tokenizer">The tokenizer to use.</param>
 		/// <param name="snippet">Your Lizzie code.</param>
 		/// <typeparam name="TContext">The type of your context object.</typeparam>
-		public static Lambda<TContext> Compile<TContext>(Tokenizer tokenizer, string snippet)
+		public static LambdaAsync<TContext> Compile<TContext>(Tokenizer tokenizer, string snippet)
 		{
 			return Compile<TContext>(tokenizer.Tokenize(snippet));
 		}
@@ -66,7 +67,7 @@ namespace lizzie
 		/// <param name="tokenizer">The tokenizer to use.</param>
 		/// <param name="snippets">Snippets containing your Lizzie code.</param>
 		/// <typeparam name="TContext">The type of your context object.</typeparam>
-		public static Lambda<TContext> Compile<TContext>(Tokenizer tokenizer, IEnumerable<string> snippets)
+		public static LambdaAsync<TContext> Compile<TContext>(Tokenizer tokenizer, IEnumerable<string> snippets)
 		{
 			return Compile<TContext>(tokenizer.Tokenize(snippets));
 		}
@@ -84,7 +85,7 @@ namespace lizzie
          * Common helper method for above methods, that does the heavy lifting,
          * and actually compiles our code down to a lambda object.
          */
-		static Lambda<TContext> Compile<TContext>(IEnumerable<string> tokens)
+		static LambdaAsync<TContext> Compile<TContext>(IEnumerable<string> tokens)
 		{
 			/*
              * Compiling main content of code.
@@ -102,7 +103,7 @@ namespace lizzie
              * also making sure we have our root level stack object available during evaluation of
              * our lambda.
              */
-			return new Lambda<TContext>(async (ctx, binder) =>
+			return new LambdaAsync<TContext>(async (ctx, binder) =>
 			{
 
 				/*
@@ -226,7 +227,7 @@ namespace lizzie
              * Lizzie, and does not require the '@' character to accomplish "lazy
              * evaluation".
              */
-			var lazyFunction = new FunctionAsync<TContext>(async (ctx2, binder2, arguments2) =>
+			var lazyFunction = new Function<TContext>((ctx2, binder2, arguments2) =>
 			{
 				return function;
 			});
@@ -363,20 +364,15 @@ namespace lizzie
 			// Checking if this is a function invocation.
 			if (!eof && en.Current == "(")
 			{
-
 				// Function invocation, making sure we apply arguments,
 				return ApplyArguments<TContext>(symbolName, en);
-
 			}
 			else
 			{
-
 				// Referencing value of symbol.
-				return new Tuple<object, bool>(new FunctionAsync<TContext>(async (ctx, binder, arguments) =>
+				return new Tuple<object, bool>(new Function<TContext>((ctx, binder, arguments) =>
 				{
-
 					return binder[symbolName];
-
 				}), eof);
 			}
 		}
@@ -415,23 +411,21 @@ namespace lizzie
              */
 			return new Tuple<object, bool>(new FunctionAsync<TContext>(async (ctx, binder, args) =>
 			{
-				object[] argsArray = null;
 				var symbol = binder[symbolName];
-				
-					argsArray = new object[arguments.Count];
+				object[] argsArray = new object[arguments.Count];
 
-					for (var i = 0; i < argsArray.Length; i++)
-					{
-						var ix = arguments[i];
-						object result;
-						if (ix is FunctionAsync<TContext> funcAsync)
-							result = await funcAsync(ctx, binder, null);
-						else
-							result = ((Function<TContext>)ix)(ctx, binder, null);
+				for (var i = 0; i < argsArray.Length; i++)
+				{
+					var ix = arguments[i];
+					object result;
+					if (ix is FunctionAsync<TContext> funcAsync)
+						result = await funcAsync(ctx, binder, null);
+					else
+						result = ((Function<TContext>)ix)(ctx, binder, null);
 
-						argsArray[i] = result;
-					}
-			
+					argsArray[i] = result;
+				}
+
 				// TODO:
 				// 	if (appliedArguments.Count == 1 && appliedArguments.Get(0) is Arguments explicitlyApplied)
 				// 	{

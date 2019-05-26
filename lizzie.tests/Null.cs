@@ -17,7 +17,7 @@ namespace lizzie.tests
         [Test]
         public async Task AssertNullIsNull()
         {
-            var lambda = LambdaCompiler.Compile("null");
+            var lambda = LambdaCompiler.CompileAsync("null");
             var result = await lambda();
             Assert.IsNull(result);
         }
@@ -25,7 +25,7 @@ namespace lizzie.tests
         [Test]
         public async Task ComparisonToNullYieldsTrue()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo)
 if(eq(null, foo), {
   57
@@ -37,7 +37,7 @@ if(eq(null, foo), {
         [Test]
         public async Task ComparisonToNullYieldsFalse()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
 var(@foo, 100)
 if(not(eq(null, foo)), {
   57

@@ -33,7 +33,7 @@ namespace lizzie.tests
         [Test]
         public async Task ReturnsNumberConstant()
         {
-            var lambda = LambdaCompiler.Compile(@"
+            var lambda = LambdaCompiler.CompileAsync(@"
         var(@foo, function({
           57
         }))
@@ -45,7 +45,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task ReturnsStringConstant()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@foo, function({
           ""Hello World""
         }))
@@ -57,7 +57,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task SingleParameter()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@foo, function({
           +(""Hello "", input)
         }, @input))
@@ -69,7 +69,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task MultipleParameters()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@foo, function({
           +(""Hello "", name, "" it seems you are "", old, "" years old"")
         }, @name, @old))
@@ -81,7 +81,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task EvaluateFunctionFromWithinFunction()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@bar, function({
           77
         }))
@@ -96,7 +96,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task ChangeStackFromWithinFunction()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@bar, function({
           var(@arg, 50)
         }))
@@ -112,7 +112,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task VariableDeclaredWithinFunctionDoesNotExistThrows()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@foo, function({
           var(@bar, 50)
         }))
@@ -130,7 +130,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task NestedFunctions()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@func1, function({
           var(@func2, function({
             +(bar2, '_yup')
@@ -147,7 +147,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task NestedFunctionsThrows()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@func1, function({
           var(@func2, function({
             bar2
@@ -169,7 +169,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task TwoFunctions()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@func1, function({
           +('success1_',bar1)
         }, @bar1))
@@ -185,7 +185,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task NoCode()
                 {
-                    var lambda = LambdaCompiler.Compile("");
+                    var lambda = LambdaCompiler.CompileAsync("");
                     var result = await lambda();
                     Assert.IsNull(result);
                 }
@@ -193,7 +193,7 @@ namespace lizzie.tests
                 [Test]
                 public async Task EmptyFunction()
                 {
-                    var lambda = LambdaCompiler.Compile(@"
+                    var lambda = LambdaCompiler.CompileAsync(@"
         var(@func, function({
         }))
         func()
