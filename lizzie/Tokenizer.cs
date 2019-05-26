@@ -109,7 +109,7 @@ namespace lizzie
         {
             while (!reader.EndOfStream) {
                 var ch = (char)reader.Peek();
-                if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
+                if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == ';') {
                     reader.Read();
                     continue;
                 }

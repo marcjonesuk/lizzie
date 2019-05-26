@@ -10,9 +10,14 @@ using System.Threading.Tasks;
 namespace lizzie
 {
     /// <summary>
-    /// Delegate for all function invocations evaluated by Lizzie in its lambda delegate.
+    /// Delegate for all asynchronous function invocations evaluated by Lizzie in its lambda delegate.
     /// </summary>
-    public delegate Task<object> Function<TContext>(TContext ctx, Binder<TContext> binder, Arguments arguments);
+    public delegate Task<object> FunctionAsync<TContext>(TContext ctx, Binder<TContext> binder, Arguments arguments);
+
+	/// <summary>
+    /// Delegate for all synchronous function invocations evaluated by Lizzie in its lambda delegate.
+    /// </summary>
+    public delegate object Function<TContext>(TContext ctx, Binder<TContext> binder, Arguments arguments);
 
     /// <summary>
     /// Delegate for a lambda object created by Lizzie.

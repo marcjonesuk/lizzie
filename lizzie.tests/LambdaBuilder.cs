@@ -59,7 +59,7 @@ bar");
 var(@foo, @var(@bar, 67))
 foo");
             var result = await lambda();
-            Assert.IsTrue(result is Function<LambdaCompiler.Nothing>);
+            Assert.IsTrue(result is FunctionAsync<LambdaCompiler.Nothing>);
         }
 
         [Test]

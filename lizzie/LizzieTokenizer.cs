@@ -54,6 +54,9 @@ namespace lizzie
 
                 // Peeking next character in stream, and checking its classification.
                 var ch = (char)reader.Peek();
+				if (ch == ';')
+					ch=' ';
+
                 switch (ch) {
                     /*
                      * End of token characters.

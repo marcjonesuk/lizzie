@@ -303,7 +303,7 @@ namespace lizzie
         void BindMethod(MethodInfo method, string functionName)
         {
             SanityCheckSignature(method, functionName);
-            _staticBinder[functionName] = Delegate.CreateDelegate(typeof(Function<TContext>), method);
+            _staticBinder[functionName] = Delegate.CreateDelegate(typeof(FunctionAsync<TContext>), method);
         }
 
         /*
@@ -326,14 +326,14 @@ namespace lizzie
             if (!method.IsStatic) {
 
                 var lateBound = CreateInstanceFunction(method);
-                _staticBinder[functionName] = new Function<TContext>(async (ctx, binder, arguments) => {
+                _staticBinder[functionName] = new FunctionAsync<TContext>(async (ctx, binder, arguments) => {
                     return await lateBound(ctx, new object[] { binder, arguments });
                 });
 
             } else {
 
                 var lateBound = CreateStaticFunction(method);
-                _staticBinder[functionName] = new Function<TContext>(async (ctx, binder, arguments) => {
+                _staticBinder[functionName] = new FunctionAsync<TContext>(async (ctx, binder, arguments) => {
                     return await lateBound(new object[] { ctx, binder, arguments });
                 });
 

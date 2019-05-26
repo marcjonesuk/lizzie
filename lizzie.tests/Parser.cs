@@ -107,7 +107,7 @@ namespace lizzie.tests
             var function = Compiler.Compile<LambdaCompiler.Nothing>(tokenizer, code);
             var ctx = new LambdaCompiler.Nothing();
             var binder = new Binder<LambdaCompiler.Nothing>();
-            binder["foo"] = new Function<LambdaCompiler.Nothing>((ctx2, binder2, arguments) =>
+            binder["foo"] = new FunctionAsync<LambdaCompiler.Nothing>((ctx2, binder2, arguments) =>
             {
                 return Task.FromResult((object)57);
             });
@@ -257,7 +257,7 @@ namespace lizzie.tests
             var ctx = new LambdaCompiler.Nothing();
             var binder = new Binder<LambdaCompiler.Nothing>();
             var result = await function(ctx, binder);
-            Assert.IsTrue(result is Function<LambdaCompiler.Nothing>);
+            Assert.IsTrue(result is FunctionAsync<LambdaCompiler.Nothing>);
         }
     }
 }
